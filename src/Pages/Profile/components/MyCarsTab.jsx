@@ -268,16 +268,8 @@ const MyCarsTab = () => {
                           {car.location}
                         </div>
                         <div className="flex items-center mt-2 text-gray-800">
-                          <span className="font-medium">₹{car.price_per_hour}/hour</span>
-                          {car.car_rating && (
-                            <div className="ml-3 flex items-center text-sm text-yellow-600">
-                              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                              </svg>
-                              <span className="ml-1">{car.car_rating}</span>
-                              <span className="ml-1 text-gray-500">({car.no_of_car_rating || 0})</span>
-                            </div>
-                          )}
+                          <span className="font-medium">₹{Math.round(car.price_per_hour)}/hour</span>
+                         
                         </div>
                       </div>
                     </div>

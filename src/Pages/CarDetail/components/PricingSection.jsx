@@ -76,16 +76,16 @@ export default function PricingSection({ car }) {
   
   // Calculate pricing
   const hourlyRate = car.price_per_hour || 0;
-  const subtotalAmount = hourlyRate * totalHours;
+  const subAmount = hourlyRate * totalHours;
   const securityDeposit = hourlyRate * 5; // 5 times hourly rate
   
   // Calculate discount amount if coupon is applied
   const discountAmount = appliedCoupon ? 
-    (subtotalAmount * appliedCoupon.discount_percentage / 100) : 0;
+    (subAmount * appliedCoupon.discount_percentage / 100) : 0;
   
   // Calculate total after discount
-  const totalAmount = Math.max(subtotalAmount - discountAmount, 0);
-  const grandTotal = totalAmount + securityDeposit;
+  const mainAmount = Math.max(subAmount - discountAmount, 0);
+  const grandTotal = mainAmount + securityDeposit;
   
   const formatPrice = (price) => {
     if (!price) return "₹ 0";
@@ -214,16 +214,16 @@ export default function PricingSection({ car }) {
       alert('Missing booking information. Please check all fields.');
       return null;
     }
-
+  
     try {
       const orderData = {
-        amount: grandTotal * 100, // Convert to paise
+        amount: Math.round(grandTotal) * 100, // Convert to paise
         currency: "INR",
         receipt: `car_${car.id}_user_${user.id}_${Date.now()}`
       };
-
+  
       console.log("Creating Razorpay order with data:", orderData);
-
+  
       const response = await fetch(API_ENDPOINTS.CREATE_RAZORPAY_ORDER, {
         method: 'POST',
         headers: {
@@ -231,22 +231,21 @@ export default function PricingSection({ car }) {
         },
         body: JSON.stringify(orderData),
       });
-
+  
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Order creation failed with response:", errorText);
-        throw new Error('Failed to create Razorpay order');
+        const errorJson = await response.json(); // Properly parse JSON
+        throw new Error(errorJson.detail || 'Failed to create Razorpay order.');
       }
-
+  
       const orderResponse = await response.json();
       console.log("Razorpay order created successfully:", orderResponse);
       return orderResponse;
     } catch (error) {
-      console.error('Error creating Razorpay order:', error);
-      alert('Failed to create payment order. Please try again.');
+      alert(error.message || 'Failed to create Razorpay order. Please try again.');
       return null;
     }
   };
+  
 
   // Open Razorpay payment window
   const openRazorpayCheckout = (orderData) => {
@@ -273,7 +272,7 @@ export default function PricingSection({ car }) {
 
     const options = {
       key: RAZORPAY_KEY_ID,
-      amount: orderData.amount,
+      amount: Math.round(orderData.amount),
       currency: orderData.currency,
       name: "Car Rental Service",
       description: `Booking ${car.name} for ${totalHours} hours`,
@@ -369,9 +368,8 @@ export default function PricingSection({ car }) {
   
         total_hours: totalHours,
         price_per_hour: hourlyRate,
-        subtotal_amount: subtotalAmount,
         discount_amount: discountAmount,
-        total_amount: totalAmount,
+        main_amount: mainAmount,
         security_deposit: securityDeposit,
         coupon_id: appliedCoupon?.code || null,
         coupon_discount: appliedCoupon?.discount_percentage || null,
@@ -393,7 +391,8 @@ export default function PricingSection({ car }) {
         console.error("Booking creation failed:", errorText);
         throw new Error('Failed to create booking');
       }
-  
+      setAppliedCoupon(null); // Clear applied coupon after booking
+      setCouponCode("");
       const result = await response.json();
       console.log("Booking created successfully:", result);
       alert("Booking successful!");
@@ -420,6 +419,7 @@ export default function PricingSection({ car }) {
     
     // Create Razorpay order
     const orderData = await createRazorpayOrder();
+    
     if (!orderData) {
       console.error("Failed to create Razorpay order");
       setIsBooking(false);
@@ -456,11 +456,11 @@ export default function PricingSection({ car }) {
   const buttonProps = getActionButtonProps();
 
   return (
-    <div className="sticky top-24">
+    <div className="sticky ">
       <div className="bg-white border rounded-lg p-6 shadow-md mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-2xl font-bold">{formatPrice(totalAmount)}</h3>
-          <span className="text-gray-500 text-sm">hourly rate: {formatPrice(hourlyRate)}</span>
+          <h3 className="text-2xl font-bold">{formatPrice(mainAmount)}</h3>
+          <span className="text-gray-500 text-sm">Hourly Rate: {formatPrice(hourlyRate)}</span>
         </div>
 
         <div className="border-t border-b py-4 my-4 space-y-3">
@@ -557,7 +557,7 @@ export default function PricingSection({ car }) {
             <div className="space-y-2 border-t pt-3 text-sm">
               <div className="flex justify-between items-center">
                 <span className="text-gray-700">Base fare ({totalHours} {totalHours === 1 ? 'hour' : 'hours'})</span>
-                <span className="font-medium">{formatPrice(subtotalAmount)}</span>
+                <span className="font-medium">{formatPrice(subAmount)}</span>
               </div>
 
               {appliedCoupon && (
@@ -568,7 +568,7 @@ export default function PricingSection({ car }) {
               )}
 
               <div className="flex justify-between items-center">
-                <span className="text-gray-700">Security deposit <span className="text-xs text-gray-500">(refundable)</span></span>
+                <span className="text-gray-700">Security deposit <span className="text-xs text-gray-500">(Refundable)</span></span>
                 <span className="font-medium">{formatPrice(securityDeposit)}</span>
               </div>
             </div>
@@ -608,7 +608,7 @@ export default function PricingSection({ car }) {
       {/* Booking Summary Popup - Only shown for verified users */}
       {showSummaryPopup && isUserVerified && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl">
+          <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-xl  mt-50">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold">Booking Summary</h3>
               <button 
@@ -650,7 +650,7 @@ export default function PricingSection({ car }) {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-700">Base fare ({totalHours} {totalHours === 1 ? 'hour' : 'hours'})</span>
-                    <span>{formatPrice(subtotalAmount)}</span>
+                    <span>{formatPrice(subAmount)}</span>
                   </div>
                   
                   {appliedCoupon && (
@@ -662,11 +662,11 @@ export default function PricingSection({ car }) {
                   
                   <div className="flex justify-between font-medium">
                     <span className="text-gray-700">Subtotal</span>
-                    <span>{formatPrice(totalAmount)}</span>
+                    <span>{formatPrice(mainAmount)}</span>
                   </div>
                   
                   <div className="flex justify-between">
-                    <span className="text-gray-700">Security deposit <span className="text-xs text-gray-500">(refundable)</span></span>
+                    <span className="text-gray-700">Security deposit <span className="text-xs text-gray-500">(Refundable)</span></span>
                     <span>{formatPrice(securityDeposit)}</span>
                   </div>
                 </div>

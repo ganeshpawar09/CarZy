@@ -1,7 +1,21 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
 
-export default function CarImageSection({ images, carName }) {
+export default function CarImageSection({ 
+  front_view_image_url, 
+  rear_view_image_url, 
+  left_side_image_url, 
+  right_side_image_url,
+  carName 
+}) {
+  // Create an array from the specific image URLs
+  const images = [
+    front_view_image_url,
+    rear_view_image_url,
+    left_side_image_url,
+    right_side_image_url
+  ].filter(Boolean); // Filter out any undefined/null values
+  
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
@@ -25,34 +39,8 @@ export default function CarImageSection({ images, carName }) {
     setLightboxOpen(false);
   };
 
-  // Group images by type for easier navigation
-  const imageCategories = {
-    exterior: ['front_view', 'diagonal_front_left', 'rear_view', 'left_side', 'right_side', 'diagonal_rear_right'],
-    interior: ['dashboard', 'front_seats', 'rear_seats', 'boot_space', 'speedometer_fuel_gauge']
-  };
-
-  // Get image type from URL or default to 'other'
-  const getImageType = (imageUrl) => {
-    if (!imageUrl) return 'other';
-    
-    for (const [category, types] of Object.entries(imageCategories)) {
-      for (const type of types) {
-        if (imageUrl.includes(type)) {
-          return category;
-        }
-      }
-    }
-    
-    return 'other';
-  };
-  
-  // Organize images by category
-  const categorizedImages = images.reduce((acc, imageUrl) => {
-    const type = getImageType(imageUrl);
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(imageUrl);
-    return acc;
-  }, {});
+  // Simple labels for the images
+  const imageLabels = ["Front", "Rear", "Left Side", "Right Side"];
 
   return (
     <>
@@ -60,12 +48,13 @@ export default function CarImageSection({ images, carName }) {
       <div className="relative mb-4 rounded-lg overflow-hidden h-96 bg-gray-100 group">
         <img
           src={images[activeImageIndex]}
-          alt={`${carName} ${activeImageIndex + 1}`}
-          className="w-full h-full object-cover"
+          alt={`${carName} ${imageLabels[activeImageIndex]}`}
+          className="w-full h-full object-contain"
+          loading="lazy"
         />
 
         <button
-          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all opacity-0 group-hover:opacity-100"
+          className="absolute  left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm rounded-full p-2 shadow-lg hover:bg-white transition-all opacity-0 group-hover:opacity-100"
           onClick={handlePrevImage}
           aria-label="Previous image"
         >
@@ -104,44 +93,23 @@ export default function CarImageSection({ images, carName }) {
         </div>
       </div>
 
-      {/* Image Categories */}
-      {Object.keys(categorizedImages).length > 1 && (
-        <div className="mb-4 border-b">
-          <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
-            {Object.keys(categorizedImages).map((category) => (
-              <button
-                key={category}
-                className="py-2 px-1 text-sm font-medium capitalize whitespace-nowrap border-b-2 border-transparent hover:border-gray-300 focus:outline-none"
-                onClick={() => {
-                  // Set active image to first image of this category
-                  const firstImageOfCategory = images.findIndex(img => 
-                    getImageType(img) === category);
-                  if (firstImageOfCategory >= 0) {
-                    setActiveImageIndex(firstImageOfCategory);
-                  }
-                }}
-              >
-                {category} ({categorizedImages[category].length})
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Thumbnails */}
       <div className="flex space-x-2 mb-8 overflow-x-auto pb-2 scrollbar-hide">
         {images.map((image, index) => (
-          <img
-            key={index}
-            src={image}
-            alt={`${carName} thumbnail ${index + 1}`}
-            className={`h-20 w-28 flex-shrink-0 object-cover rounded cursor-pointer transition-all ${
-              index === activeImageIndex
-                ? "border-2 border-black"
-                : "opacity-70 hover:opacity-100"
-            }`}
-            onClick={() => setActiveImageIndex(index)}
-          />
+          <div key={index} className="flex flex-col items-center">
+            <img
+              src={image}
+              alt={`${carName} ${imageLabels[index]}`}
+              className={`h-16 w-24 flex-shrink-0 object-contain rounded cursor-pointer transition-all ${
+                index === activeImageIndex
+                  ? "border-2 border-black"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+              onClick={() => setActiveImageIndex(index)}
+              loading="lazy"
+            />
+            <span className="text-xs mt-1">{imageLabels[index]}</span>
+          </div>
         ))}
       </div>
 
@@ -161,8 +129,9 @@ export default function CarImageSection({ images, carName }) {
           <div className="relative max-w-5xl max-h-full overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <img
               src={images[activeImageIndex]}
-              alt={`${carName} full size ${activeImageIndex + 1}`}
+              alt={`${carName} ${imageLabels[activeImageIndex]}`}
               className="w-full h-auto max-h-screen object-contain"
+              loading="lazy"
             />
             
             <button

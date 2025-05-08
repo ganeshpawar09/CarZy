@@ -40,6 +40,7 @@ export default function MyCarsTripsTab() {
   };
 
   const formatCurrency = (amount) => {
+    amount = Math.round(amount);
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -48,7 +49,7 @@ export default function MyCarsTripsTab() {
   };
 
   const handleCancelClick = (trip) => {
-    const penaltyAmount = trip.total_amount * 0.15;
+    const penaltyAmount = (Math.round(trip.total_hours * trip.price_per_hour)-(((trip.total_hours * trip.price_per_hour) * trip.coupon_discount) / 100)) * 0.10;
     setCancelPenalty(penaltyAmount);
     setSelectedTripId(trip.id);
     setSelectedTrip(trip);
@@ -113,33 +114,37 @@ export default function MyCarsTripsTab() {
   const formatDate = (dateTimeStr) => {
     if (!dateTimeStr) return "N/A";
     const date = new Date(dateTimeStr);
-    return date.toLocaleDateString('en-IN', {
+    return date.toLocaleString('en-IN', {
       day: 'numeric',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     });
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      booked: { bg: "bg-blue-100", text: "text-blue-800", icon: Clock, label: "Booked" },
-      completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: "Completed" },
-      cancelled: { bg: "bg-red-100", text: "text-red-800", icon: XCircle, label: "Cancelled" },
-      cancelled_by_owner: { bg: "bg-orange-100", text: "text-orange-800", icon: AlertCircle, label: "Cancelled by Owner" },
-      ongoing: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock, label: "Ongoing" },
-      picked: { bg: "bg-purple-100", text: "text-purple-800", icon: CheckCircle, label: "Picked Up" }
+
+  // Update the getStatusBadge function to match TripCard style
+    const getStatusBadge = (status) => {
+      const statusConfig = {
+        booked: { bg: "bg-blue-100", text: "text-blue-800", icon: Clock, label: "Booked" },
+        completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: "Completed" },
+        cancelled_by_user: { bg: "bg-red-100", text: "text-red-800", icon: AlertCircle, label: "Cancelled by User" },
+        cancelled_by_owner: { bg: "bg-orange-100", text: "text-orange-800", icon: AlertCircle, label: "Cancelled by Owner" },
+        picked: { bg: "bg-purple-100", text: "text-purple-800", icon: CheckCircle, label: "Picked Up" }
+      };
+  
+      const config = statusConfig[status] || { bg: "bg-gray-100", text: "text-gray-800", icon: Clock, label: status };
+      const IconComponent = config.icon;
+  
+      return (
+        <div className={`px-2.5 py-0.5 rounded text-xs font-medium flex items-center ${config.bg} ${config.text}`}>
+          <IconComponent size={12} className="mr-1" />
+          {config.label}
+        </div>
+      );
     };
-
-    const config = statusConfig[status.toLowerCase()] || { bg: "bg-gray-100", text: "text-gray-800", icon: Clock, label: status };
-    const IconComponent = config.icon;
-
-    return (
-      <div className={`px-2.5 py-0.5 rounded text-xs font-medium flex items-center ${config.bg} ${config.text}`}>
-        <IconComponent size={12} className="mr-1" />
-        {config.label}
-      </div>
-    );
-  };
 
   if (loading) return <div className="text-center py-10">Loading your car trips...</div>;
   if (error) return <div className="text-red-500 py-10">Error: {error}</div>;
@@ -187,10 +192,8 @@ export default function MyCarsTripsTab() {
                         <span className="font-medium">{formatDate(trip.end_datetime)}</span>
                       </div>
                     </div>
-                    <div className="text-sm text-gray-500 mt-1">
-                      Duration: {trip.total_hours} hours
-                    </div>
                   </div>
+
 
                   <div>
                     <h4 className="text-sm font-medium text-gray-500">Pickup Location</h4>
@@ -224,7 +227,7 @@ export default function MyCarsTripsTab() {
 
                   <button
                     onClick={() => handleViewCar(trip.car_id)}
-            className="px-3 py-1 text-sm bg-purple-50 text-purple-600 rounded border border-purple-200 hover:bg-purple-100"
+                    className="px-3 py-1 text-sm bg-purple-50 text-purple-600 rounded border border-purple-200 hover:bg-purple-100"
 
                   >
                     <span>View Car</span>
@@ -235,7 +238,7 @@ export default function MyCarsTripsTab() {
                     <div className="">
                       <button
                         onClick={() => handleCancelClick(trip)}
-            className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded border border-red-200 hover:bg-red-100"
+                        className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded border border-red-200 hover:bg-red-100"
 
                       >
                         Cancel Booking
@@ -244,46 +247,7 @@ export default function MyCarsTripsTab() {
                   )}
                 </div>
 
-                {/* Timeline and Price Details */}
-                <div className="space-y-3">
-                  {/* Timeline section */}
-                  <h4 className="text-sm font-medium text-gray-500">Trip Timeline</h4>
 
-                  {/* Booking Time */}
-                  <div className="flex items-start">
-                    <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center bg-blue-100 rounded-full text-blue-600">
-                      <Clock size={16} />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium">Booked</p>
-                      <p className="text-xs text-gray-500">{formatDateTime(trip.start_datetime)}</p>
-                    </div>
-                  </div>
-
-                  {trip.picked_time && (
-                    <div className="flex items-start">
-                      <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center bg-green-100 rounded-full text-green-600">
-                        <CheckCircle size={16} />
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium">Picked up</p>
-                        <p className="text-xs text-gray-500">{formatDateTime(trip.picked_time)}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {trip.returned_time && (
-                    <div className="flex items-start">
-                      <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center bg-blue-100 rounded-full text-blue-600">
-                        <CheckCircle size={16} />
-                      </div>
-                      <div className="ml-3">
-                        <p className="text-sm font-medium">Returned</p>
-                        <p className="text-xs text-gray-500">{formatDateTime(trip.returned_time)}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
 
               {/* Bill Section */}
@@ -298,6 +262,12 @@ export default function MyCarsTripsTab() {
                     <span className="text-gray-600">Trip Duration</span>
                     <span>{trip.total_hours} hours</span>
                   </div>
+
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Main Amount</span>
+                    <span>{formatCurrency(trip.total_hours * trip.price_per_hour)}</span>
+                  </div>
+
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Security Deposit</span>
                     <span>{formatCurrency(trip.security_deposit)}</span>
@@ -306,21 +276,21 @@ export default function MyCarsTripsTab() {
                   {trip.coupon_discount > 0 && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Coupon Discount</span>
-                      <span>- {formatCurrency((trip.total_hours * trip.price_per_hour) * trip.coupon_discount / 100)}</span>
+                      <span>- {formatCurrency(((trip.total_hours * trip.price_per_hour) * trip.coupon_discount) / 100)}</span>
                     </div>
                   )}
 
-                  {trip.late_fees_charged && (
+                  {trip.late_fee && (
                     <div className="flex justify-between text-sm text-red-600">
                       <span>Late Fees</span>
-                      <span>{formatCurrency(trip.late_fees_amount)}</span>
+                      <span>{formatCurrency(trip.late_fee)}</span>
                     </div>
                   )}
 
                   <div className="border-t pt-2 mt-2">
                     <div className="flex justify-between font-medium">
                       <span>Total Amount</span>
-                      <span>{formatCurrency(trip.total_amount)}</span>
+                      <span>{formatCurrency((trip.total_hours * trip.price_per_hour) - (((trip.total_hours * trip.price_per_hour) * trip.coupon_discount) / 100) + trip.security_deposit)}</span>
                     </div>
                   </div>
                 </div>

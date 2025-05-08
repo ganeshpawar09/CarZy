@@ -9,7 +9,8 @@ export default function BasicInfo() {
     getFilteredModels,
     handleMakeSelect,
     handleModelSelect,
-    setActiveSection
+    setActiveSection,
+    resetForm,
   } = useCarListing();
 
   // State for suggestions visibility
@@ -280,7 +281,14 @@ export default function BasicInfo() {
         </div>
       </div>
       
-      <div className="mt-6 flex justify-end">
+      <div className="mt-6 flex justify-between">
+      <button
+            type="button"
+            onClick={resetForm}
+            className="border border-red-500 text-red-500 font-bold py-2 px-6 rounded-md hover:bg-red-50 transition duration-300"
+          >
+            Reset Form
+          </button>
         <button
           type="button"
           onClick={() => setActiveSection("car-photos")}

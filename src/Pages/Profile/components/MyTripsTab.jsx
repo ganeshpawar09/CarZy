@@ -19,7 +19,6 @@ const MyTripsTab = () => {
     rear: null,
     left: null,
     right: null,
-    interior: null
   });
 
   // Image upload status
@@ -29,7 +28,6 @@ const MyTripsTab = () => {
     rear: null,
     left: null,
     right: null,
-    interior: null
   });
 
   // Overall uploading state
@@ -52,6 +50,7 @@ const MyTripsTab = () => {
       // Replace with your actual API endpoint
       const response = await fetch(`${API_ENDPOINTS.MY_BOOKING}/${userId}`);
       const data = await response.json();
+      console.log("Fetched trips data:", data); // Debugging line
       setTrips(data.reverse());
       setLoading(false);
     } catch (err) {
@@ -78,7 +77,9 @@ const MyTripsTab = () => {
     return date.toLocaleDateString('en-IN', {
       day: 'numeric',
       month: 'short',
-      year: 'numeric'
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -126,9 +127,7 @@ const MyTripsTab = () => {
 
   const handleCancelTrip = (trip) => {
     setSelectedTrip(trip);
-    // Calculate refund amount (example calculation - adjust as needed)
-    const refund = Math.floor(trip.total_amount * 0.7);
-    setRefundAmount(refund);
+
     setShowCancelModal(true);
   };
 
@@ -142,7 +141,7 @@ const MyTripsTab = () => {
         body: JSON.stringify({
           user_id: selectedTrip.user_id,
           booking_id: selectedTrip.id,
-          refund_percentage: calculateRefundRate(selectedTrip.start_datetime)
+          refund_percentage: calculateRefundRate(selectedTrip.created_at, selectedTrip.start_datetime)
         }),
       });
 
@@ -174,14 +173,12 @@ const MyTripsTab = () => {
       rear: null,
       left: null,
       right: null,
-      interior: null
     });
     setImageUrls({
       front: null,
       rear: null,
       left: null,
       right: null,
-      interior: null
     });
     setUploadStatus({});
   };
@@ -236,7 +233,6 @@ const MyTripsTab = () => {
         before_rear_image_url: imageUrls.rear,
         before_left_side_image_url: imageUrls.left,
         before_right_side_image_url: imageUrls.right,
-        before_interior_image_url: imageUrls.interior
       };
 
       // Call API to confirm pickup
@@ -270,7 +266,6 @@ const MyTripsTab = () => {
         after_rear_image_url: imageUrls.rear,
         after_left_side_image_url: imageUrls.left,
         after_right_side_image_url: imageUrls.right,
-        after_interior_image_url: imageUrls.interior
       };
 
       // Call API to confirm delivery/return
@@ -345,7 +340,7 @@ const MyTripsTab = () => {
       </div>
     </div>
   );
-const navigate = useNavigate();
+  const navigate = useNavigate();
   const handleViewCar = (carId) => {
     navigate(`/car/${carId}`);
   };
@@ -353,23 +348,23 @@ const navigate = useNavigate();
   const getActionButtons = (trip) => {
     return (
       <div className="flex space-x-2 mt-3">
-        <button 
+        <button
           onClick={() => handleViewCar(trip.car_id)}
           className="px-3 py-1 text-sm bg-purple-50 text-purple-600 rounded border border-purple-200 hover:bg-purple-100 flex items-center"
         >
           <Car size={14} className="mr-1" />
           View Car
         </button>
-        
+
         {trip.status === "booked" && (
           <>
-            <button 
+            <button
               onClick={() => handleCancelTrip(trip)}
               className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded border border-red-200 hover:bg-red-100"
             >
               Cancel Trip
             </button>
-            <button 
+            <button
               onClick={() => handlePickupTrip(trip)}
               className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded border border-blue-200 hover:bg-blue-100"
             >
@@ -377,9 +372,9 @@ const navigate = useNavigate();
             </button>
           </>
         )}
-        
+
         {trip.status === "picked" && (
-          <button 
+          <button
             onClick={() => handleDeliveryTrip(trip)}
             className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded border border-green-200 hover:bg-green-100"
           >
@@ -391,6 +386,7 @@ const navigate = useNavigate();
   };
 
   const formatCurrency = (amount) => {
+    amount=Math.round(amount);
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -403,9 +399,8 @@ const navigate = useNavigate();
     const statusConfig = {
       booked: { bg: "bg-blue-100", text: "text-blue-800", icon: Clock, label: "Booked" },
       completed: { bg: "bg-green-100", text: "text-green-800", icon: CheckCircle, label: "Completed" },
-      cancelled: { bg: "bg-red-100", text: "text-red-800", icon: AlertCircle, label: "Cancelled" },
+      cancelled_by_user: { bg: "bg-red-100", text: "text-red-800", icon: AlertCircle, label: "Cancelled by User" },
       cancelled_by_owner: { bg: "bg-orange-100", text: "text-orange-800", icon: AlertCircle, label: "Cancelled by Owner" },
-      ongoing: { bg: "bg-yellow-100", text: "text-yellow-800", icon: Clock, label: "Ongoing" },
       picked: { bg: "bg-purple-100", text: "text-purple-800", icon: CheckCircle, label: "Picked Up" }
     };
 
@@ -426,19 +421,7 @@ const navigate = useNavigate();
     window.open(url, '_blank');
   };
 
-  const getTripStatusMessage = (trip) => {
-    if (trip.status === "cancelled_by_owner") {
-      return (
-        <div className="bg-orange-50 p-3 rounded-md mt-3 text-sm">
-          <div className="flex items-center">
-            <AlertCircle size={16} className="mr-2 text-orange-600" />
-            <span className="text-orange-800 font-medium">This trip was cancelled by the car owner</span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
+
 
   if (loading) {
     return <div className="py-4 flex justify-center">Loading trips...</div>;
@@ -457,31 +440,50 @@ const navigate = useNavigate();
     return diffDays > 0 ? diffDays : 0;
   };
 
-  const calculateRefundRate = (startDateTime) => {
-    const daysRemaining = calculateDaysRemaining(startDateTime);
+  const calculateRefundRate = (createdAt, startDateTime) => {
+    // Convert the backend datetime format 'YYYY-MM-DD HH:mm:ss' to a standard Date format
+    const now = new Date(); // Current date-time
 
-    if (daysRemaining >= 7) return 90;
-    if (daysRemaining >= 5) return 70;
-    if (daysRemaining >= 3) return 50;
-    if (daysRemaining >= 1) return 30;
-    return 10;
+    const created = new Date(createdAt.replace(' ', 'T')); // Convert to ISO-like format (replace space with 'T')
+    const start = new Date(startDateTime.replace(' ', 'T')); // Convert to ISO-like format (replace space with 'T')
+
+    // Ensure valid date-time values and that start date is after created date
+    if (isNaN(created) || isNaN(start) || start <= created) return 0;
+
+    const totalTime = start - created; // Total duration from booking creation to start
+    const remainingTime = start - now; // Remaining time from now until booking start
+
+    if (remainingTime <= 0) return 0; // If the start time has already passed
+
+    // Calculate the percentage of remaining time relative to total time
+    const rate = (remainingTime / totalTime) * 100;
+
+    // Return the refund rate rounded to two decimal places
+    return parseFloat(rate.toFixed(2));
   };
 
+
   const calculateRefundableAmount = (trip) => {
-    const baseAmount = trip.total_amount - trip.security_deposit;
-    const netBaseAmount = baseAmount - (baseAmount * trip.coupon_discount)/100;
-    const refundRate = calculateRefundRate(trip.start_datetime);
+    const netBaseAmount = Math.round(trip.total_hours * trip.price_per_hour) - (Math.round(trip.total_hours * trip.price_per_hour) * trip.coupon_discount) / 100;
+    const refundRate = calculateRefundRate(trip.created_at, trip.start_datetime);
 
     return Math.floor(netBaseAmount * (refundRate / 100));
   };
   return (
     <div className="font-monda py-4">
-      {trips.map((trip) => (
+      {trips.length === 0 ? (
+        <div className="text-center py-16 bg-gray-50 rounded-lg">
+          <div className="inline-block p-3 bg-blue-100 rounded-full mb-4">
+            <Calendar className="h-8 w-8 text-blue-600" />
+          </div>
+          <h3 className="text-lg font-medium">No Bookings Found</h3>
+        </div>
+      ) : (trips.map((trip) => (
         <div key={trip.id} className="mt-5 w-full bg-white rounded-xl shadow-md overflow-hidden">
           {/* Header */}
           <div className="bg-blue-50 p-4 border-b">
             <div className="flex justify-between items-center">
-             
+              <h3 className="text-lg font-medium">Booking #{trip.id}</h3>
               {getStatusBadge(trip.status)}
             </div>
           </div>
@@ -498,9 +500,6 @@ const navigate = useNavigate();
                     <ArrowRight className="inline mx-1 h-3" />
                     <span className="font-medium">{formatDate(trip.end_datetime)}</span>
                   </div>
-                </div>
-                <div className="text-sm text-gray-500 mt-1">
-                  Duration: {trip.total_hours} hours
                 </div>
               </div>
 
@@ -555,8 +554,7 @@ const navigate = useNavigate();
                 </div>
               )}
 
-              {/* Status message */}
-              {getTripStatusMessage(trip)}
+
             </div>
           </div>
 
@@ -580,27 +578,27 @@ const navigate = useNavigate();
               {trip.coupon_discount > 0 && (
                 <div className="flex justify-between text-sm text-green-600">
                   <span>Coupon Discount</span>
-                  <span>- {((trip.total_hours*trip.price_per_hour)*trip.coupon_discount)/100}</span>
+                  <span>- {formatCurrency(((trip.total_hours * trip.price_per_hour) * trip.coupon_discount) / 100)}</span>
                 </div>
               )}
 
-              {trip.late_fees_charged && (
+              {trip.late_fee && (
                 <div className="flex justify-between text-sm text-red-600">
                   <span>Late Fees</span>
-                  <span>{formatCurrency(trip.late_fees_amount)}</span>
+                  <span>{formatCurrency(trip.late_fee)}</span>
                 </div>
               )}
 
               <div className="border-t pt-2 mt-2">
                 <div className="flex justify-between font-medium">
                   <span>Total Amount</span>
-                  <span>{formatCurrency(trip.total_amount)}</span>
+                  <span>{formatCurrency(Math.round(trip.total_hours * trip.price_per_hour) - Math.round((Math.round(trip.total_hours * trip.price_per_hour) * trip.coupon_discount) / 100) + trip.security_deposit)}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      ))}
+      )))}
 
       {/* Cancel Modal */}
       {showCancelModal && selectedTrip && (
@@ -624,29 +622,18 @@ const navigate = useNavigate();
                 <div className="text-gray-600">End Date:</div>
                 <div className="font-medium">{formatDate(selectedTrip.end_datetime)}</div>
                 <div className="text-gray-600">Total Amount:</div>
-                <div className="font-medium">₹{selectedTrip.total_amount}</div>
+                <div className="font-medium">₹{formatCurrency(selectedTrip.total_hours * selectedTrip.price_per_hour)}</div>
                 <div className="text-gray-600">Security Deposit:</div>
                 <div className="font-medium">₹{selectedTrip.security_deposit}</div>
                 {selectedTrip.coupon_discount > 0 && (
                   <>
                     <div className="text-gray-600">Discount Applied:</div>
-                    <div className="font-medium">₹{selectedTrip.coupon_discount}</div>
+                    <div className="font-medium">₹{formatCurrency((selectedTrip.total_hours * selectedTrip.price_per_hour) * selectedTrip.coupon_discount / 100)}</div>
                   </>
                 )}
               </div>
             </div>
 
-            {/* Cancellation Policy */}
-            <div className="border border-gray-200 p-3 rounded-md mb-4 bg-gray-50">
-              <h4 className="font-medium text-sm mb-2">Cancellation Policy</h4>
-              <ul className="text-sm text-gray-700 ml-4 list-disc">
-                <li>≥ 7 days before start: 90% refund</li>
-                <li>≥ 5 days before start: 70% refund</li>
-                <li>≥ 3 days before start: 50% refund</li>
-                <li>≥ 1 day before start: 30% refund</li>
-                <li>&lt; 1 day before start: 10% refund</li>
-              </ul>
-            </div>
 
             {/* Refund Calculation */}
             <div className="border border-gray-300 p-3 rounded-md mb-4">
@@ -661,19 +648,19 @@ const navigate = useNavigate();
               <div className="border-t border-gray-200 pt-2 mt-2">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="text-gray-600">Base Amount:</div>
-                  <div className="font-medium">₹{selectedTrip.total_amount - selectedTrip.security_deposit}</div>
+                  <div className="font-medium">₹{selectedTrip.main_amount}</div>
 
                   {selectedTrip.coupon_discount > 0 && (
                     <>
                       <div className="text-gray-600">Applied Discount:</div>
                       <div className="font-medium">₹{selectedTrip.coupon_discount}</div>
                       <div className="text-gray-600">Net Base Amount:</div>
-                      <div className="font-medium">₹{selectedTrip.total_amount - selectedTrip.security_deposit - selectedTrip.coupon_discount}</div>
+                      <div className="font-medium">₹{selectedTrip.main_amount - (selectedTrip.main_amount * selectedTrip.coupon_discount / 100)}</div>
                     </>
                   )}
 
                   <div className="text-gray-600">Refund Rate:</div>
-                  <div className="font-medium">{calculateRefundRate(selectedTrip.start_datetime)}%</div>
+                  <div className="font-medium">{calculateRefundRate(selectedTrip.created_at, selectedTrip.start_datetime)}%</div>
 
                   <div className="text-gray-600">Refundable Amount:</div>
                   <div className="font-medium">₹{calculateRefundableAmount(selectedTrip)}</div>
@@ -748,7 +735,6 @@ const navigate = useNavigate();
               <ImageUploadField label="Rear View" onChange={handleImageChange} type="rear" />
               <ImageUploadField label="Left Side" onChange={handleImageChange} type="left" />
               <ImageUploadField label="Right Side" onChange={handleImageChange} type="right" />
-              <ImageUploadField label="Interior" onChange={handleImageChange} type="interior" />
             </div>
 
             <div className="flex justify-end space-x-3">
@@ -813,7 +799,6 @@ const navigate = useNavigate();
               <ImageUploadField label="Rear View" onChange={handleImageChange} type="rear" />
               <ImageUploadField label="Left Side" onChange={handleImageChange} type="left" />
               <ImageUploadField label="Right Side" onChange={handleImageChange} type="right" />
-              <ImageUploadField label="Interior" onChange={handleImageChange} type="interior" />
             </div>
 
             <div className="flex justify-end space-x-3">

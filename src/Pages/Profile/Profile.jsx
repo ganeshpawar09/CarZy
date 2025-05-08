@@ -9,6 +9,7 @@ import PaymentsTab from "./components/PaymentsTab";
 import RefundsTab from "./components/RefundsTab";
 import CouponsTab from "./components/CouponsTab";
 import PenaltiesTab from "./components/PenaltiesTab";
+import PayoutsTab from "./components/PayoutsTab";
 
 
 export default function ProfilePage() {
@@ -21,6 +22,7 @@ export default function ProfilePage() {
     { id: "cars", label: "My Cars", icon: <Car size={20} /> },
     { id: "myCarsTrips", label: "My Cars Trips", icon: <ListChecks size={20} /> },
     { id: "payments", label: "Payments", icon: <CreditCard size={20} /> },
+    { id: "payouts", label: "Payouts", icon: <RefreshCcw size={20} /> },
     { id: "refunds", label: "Refunds", icon: <RefreshCcw size={20} /> },
     { id: "coupons", label: "Coupons", icon: <Ticket size={20} /> },
     { id: "penalties", label: "Penalties", icon: <AlertCircle size={20} /> },
@@ -56,6 +58,7 @@ export default function ProfilePage() {
             {activeTab === "cars"  && <MyCarsTab />}
             {activeTab === "myCarsTrips"  && <MyCarsTripsTab />}
             {activeTab === "payments" && <PaymentsTab />}
+            {activeTab === "payouts" && <PayoutsTab />}
             {activeTab === "refunds" && <RefundsTab />}
             {activeTab === "coupons" && <CouponsTab />}
             {activeTab === "penalties" && <PenaltiesTab />}

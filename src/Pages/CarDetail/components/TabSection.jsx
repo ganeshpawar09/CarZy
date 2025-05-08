@@ -220,23 +220,6 @@ export default function TabSection({ car }) {
                   </div>
                   <div className="text-sm text-gray-500 mt-1">{car.no_of_car_rating} ratings</div>
                 </div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium mb-1">What renters love about this car:</div>
-                  <ul className="text-sm text-gray-600 space-y-1">
-                    <li className="flex items-center">
-                      <Check className="h-4 w-4 text-green-500 mr-1" />
-                      Excellent fuel efficiency
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="h-4 w-4 text-green-500 mr-1" />
-                      Well maintained condition
-                    </li>
-                    <li className="flex items-center">
-                      <Check className="h-4 w-4 text-green-500 mr-1" />
-                      Easy to drive and park
-                    </li>
-                  </ul>
-                </div>
               </div>
             </div>
           </div>

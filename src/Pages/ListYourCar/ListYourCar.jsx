@@ -8,6 +8,7 @@ import CarPhotos from "./components/CarPhotos";
 import Documents from "./components/Documents";
 import PricingFeatures from "./components/PricingFeatures";
 import Location from "./components/Location";
+import { useNavigate } from "react-router-dom";
 
 export default function ListYourCar() {
   // Use the car listing context
@@ -44,14 +45,6 @@ export default function ListYourCar() {
           "rear_view_image_url",
           "left_side_image_url",
           "right_side_image_url",
-          "diagonal_front_left_image_url",
-          "diagonal_rear_right_image_url",
-          "dashboard_image_url",
-          "speedometer_fuel_gauge_image_url",
-          "front_seats_image_url",
-          "rear_seats_image_url",
-          "boot_space_image_url",
-          "tyre_condition_image_url",
           "puc_image_url",
           "rc_image_url",
           "insurance_image_url"
@@ -81,10 +74,15 @@ export default function ListYourCar() {
   }, [isUpdateMode, setFormData, setImages, setPreviews]);
 
 
+  const navigate = useNavigate();
   const handleGoBack = () => {
-    window.history.back();
+    if (isUpdateMode) {
+      navigate("/profile");
+    } else {
+      navigate("/"); 
+    }
   };
-  // Section navigation
+
   const renderSectionNav = () => (
     <div className="flex justify-between mb-6 border-b border-gray-200 pb-4">
       <button 

@@ -28,6 +28,7 @@ export default function Location() {
   };
 
   const handleFormSubmit = async () => {
+    
     setApiError("");
     try {
       

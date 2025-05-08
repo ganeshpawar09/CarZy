@@ -1,6 +1,36 @@
 import { Star, Heart, Award, Clock, Shield, MapPin } from "lucide-react";
+import { useSearch } from "../../Context/SearchContext";
+import { useState, useEffect } from "react";  
 
 export default function CarNameSection({ car }) {
+  const { searchParams } = useSearch(); // Access the search context
+  const [distance, setDistance] = useState("Distance unavailable");
+
+  // Calculate distance whenever coordinates change
+  useEffect(() => {
+    if (searchParams.coordinates && car.latitude && car.longitude) {
+      const coords = searchParams.coordinates;
+      if (coords && coords.lat && coords.lng) {
+        const toRad = (value) => (value * Math.PI) / 180;
+        const R = 6371; // Earth radius in km
+        const dLat = toRad(car.latitude - coords.lat);
+        const dLon = toRad(car.longitude - coords.lng);
+        const lat1 = toRad(coords.lat);
+        const lat2 = toRad(car.latitude);
+
+        const a =
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.sin(dLon / 2) * Math.sin(dLon / 2) *
+          Math.cos(lat1) * Math.cos(lat2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const calculatedDistance = R * c;
+        setDistance(`${calculatedDistance.toFixed(2)} Kms`);
+      }
+    } else {
+      setDistance("Distance unavailable");
+    }
+  }, [searchParams.coordinates, car.latitude, car.longitude]);
+
   return (
     <div className="px-4 py-6 bg-white rounded-lg shadow-sm">
       {/* Car Name and Basic Info */}
@@ -53,7 +83,7 @@ export default function CarNameSection({ car }) {
           </div>
         )}
         
-        {car.distance < 10 && (
+        {Number(distance.split(" ")[0]) < 10 && (
           <div className="flex items-center">
             <MapPin className="h-5 w-5 text-red-500 mr-2" />
             <span className="text-sm font-medium">Near You</span>
@@ -84,42 +114,15 @@ export default function CarNameSection({ car }) {
         <div className="flex items-center justify-between">
           <span className="text-gray-700">
             <span className="font-semibold">
-              {(() => {
-                try {
-                  const storedLocation = localStorage.getItem("selectedLocation");
-                  if (storedLocation) {
-                    const { coords } = JSON.parse(storedLocation);
-                    if (coords && coords.lat && coords.lng) {
-                      const toRad = (value) => (value * Math.PI) / 180;
-                      const R = 6371; // Earth radius in km
-                      const dLat = toRad(car.latitude - coords.lat);
-                      const dLon = toRad(car.longitude - coords.lng);
-                      const lat1 = toRad(coords.lat);
-                      const lat2 = toRad(car.latitude);
-
-                      const a =
-                        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                        Math.sin(dLon / 2) * Math.sin(dLon / 2) *
-                        Math.cos(lat1) * Math.cos(lat2);
-                      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-                      const distance = R * c;
-                      return `${distance.toFixed(2)} Kms`;
-                    }
-                  }
-                  return "Distance unavailable";
-                } catch {
-                  return "Distance unavailable";
-                }
-              })()} Away from you
+              {distance} Away from you
             </span>
           </span>
           <button 
             className="text-blue-600 hover:text-blue-800 font-medium px-3 py-1 hover:bg-blue-50 rounded-md transition"
             onClick={() => {
               try {
-                const storedLocation = localStorage.getItem("selectedLocation");
-                if (storedLocation) {
-                  const { coords } = JSON.parse(storedLocation);
+                if (searchParams.coordinates) {
+                  const coords = searchParams.coordinates;
                   if (coords && coords.lat && coords.lng) {
                     const directionsUrl = `https://www.google.com/maps/dir/?api=1&origin=${coords.lat},${coords.lng}&destination=${car.latitude},${car.longitude}&travelmode=driving`;
                     window.open(directionsUrl, '_blank');

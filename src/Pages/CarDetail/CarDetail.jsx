@@ -40,7 +40,7 @@ export default function CarDetails() {
     // we would normally fetch it from the API here
     // For this example, let's simulate an API call
     setLoading(true);
-    
+
     // Simulate API fetch (replace this with your actual API call)
     setTimeout(() => {
       // This would be your API fetch logic
@@ -49,7 +49,7 @@ export default function CarDetails() {
       //   setCar(processedCar);
       //   setLoading(false);
       // });
-      
+
       // For now, just set a loading state
       setLoading(false);
     }, 500);
@@ -58,24 +58,24 @@ export default function CarDetails() {
   // Process and enrich car data with required format and additional info
   const processCarData = (rawCarData) => {
     // Format features if they're coming as a string
-    const features = typeof rawCarData.features === 'string' 
+    const features = typeof rawCarData.features === 'string'
       ? rawCarData.features.split(',').map(f => ({ name: f.trim(), available: true }))
       : Array.isArray(rawCarData.features)
-        ? rawCarData.features 
+        ? rawCarData.features
         : [];
-    
+
     // Calculate base hours for pricing (default to 4 hours)
     const hours = 4;
     const basePrice = rawCarData.price_per_hour * hours;
     const tripProtectionFee = Math.round(basePrice * 0.05); // Assuming 5% of base price
     const totalPrice = basePrice + tripProtectionFee;
-    
+
     // Format location object
     const location = typeof rawCarData.location === 'string'
       ? { address: rawCarData.location, latitude: rawCarData.latitude, longitude: rawCarData.longitude }
       : rawCarData.location;
-    
-   
+
+
     // Prepare images array from various image URLs or use placeholders
     const images = [
       rawCarData.front_view_image_url,
@@ -83,14 +83,8 @@ export default function CarDetails() {
       rawCarData.rear_view_image_url,
       rawCarData.left_side_image_url,
       rawCarData.right_side_image_url,
-      rawCarData.dashboard_image_url,
-      rawCarData.front_seats_image_url,
-      rawCarData.rear_seats_image_url,
-      rawCarData.boot_space_image_url,
-      rawCarData.speedometer_fuel_gauge_image_url,
-      rawCarData.tyre_condition_image_url
     ].filter(Boolean);
-    
+
     // Final processed car data
     return {
       ...rawCarData,
@@ -142,7 +136,7 @@ export default function CarDetails() {
   return (
     <div className="font-monda container mx-auto px-4 py-8 pt-20">
       <Navbar />
-      
+
       {/* Back Button */}
       <button
         onClick={() => window.history.back()}
@@ -155,14 +149,20 @@ export default function CarDetails() {
       <div className="pt-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
           <CarNameSection car={car} />
-          <CarImageSection images={car.images} carName={car.name} />
+          <CarImageSection
+            front_view_image_url={car.front_view_image_url}
+            rear_view_image_url={car.rear_view_image_url}
+            left_side_image_url={car.left_side_image_url}
+            right_side_image_url={car.right_side_image_url}
+            carName={car.name}
+          />
           <TabSection car={car} />
         </div>
 
         {/* Right Column - Booking */}
         <div className="lg:col-span-1">
-          <PricingSection 
-            car={car} 
+          <PricingSection
+            car={car}
             selectedDate={selectedDate}
             onDateChange={handleDateChange}
           />

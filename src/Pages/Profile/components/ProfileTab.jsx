@@ -130,6 +130,7 @@ const ProfileTab = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          user_id: userData.id,
           otp_id: otpId,
           otp: otp
         }),
@@ -452,7 +453,7 @@ const ProfileTab = () => {
                   <img 
                     src={passportPhotoPreview} 
                     alt="Passport preview" 
-                    className="w-full h-full object-cover rounded border"
+                    className="w-full h-full object-contain rounded border"
                   />
                   <button
                     className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
@@ -493,7 +494,7 @@ const ProfileTab = () => {
                   <img 
                     src={licensePreview} 
                     alt="License preview" 
-                    className="w-full h-full object-cover rounded border"
+                    className="w-full h-full object-contain rounded border"
                   />
                   <button
                     className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"

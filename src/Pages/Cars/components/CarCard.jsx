@@ -1,46 +1,38 @@
 import { Link, useNavigate } from "react-router-dom";
 import { MapPin, Star } from "lucide-react";
-
+import { useSearch } from "../../Context/SearchContext";
 function CarCard({ car }) {
   const navigate = useNavigate();
-
+  const { searchParams } = useSearch(); // Use the search context
   // Calculate the total price based on hourly rate and duration
+
+  const calculateTotalHours = () => {
+    if (!searchParams.startDateTime || !searchParams.endDateTime) return 0;
+    
+    const startDate = new Date(searchParams.startDateTime);
+    const endDate = new Date(searchParams.endDateTime);
+    
+    const diffMs = endDate - startDate;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    return Math.max(Math.round(diffHours), 1); // Ensure at least 1 hour
+  };
   const calculateTotalPrice = (car) => {
-    const rentalDates = localStorage.getItem("rentalDates");
-    let startDateTime, endDateTime;
-    
-    if (rentalDates) {
-      try {
-        const dates = JSON.parse(rentalDates);
-        startDateTime = new Date(dates.start);
-        endDateTime = new Date(dates.end);
-      } catch (error) {
-        console.error("Error parsing rental dates", error);
-        startDateTime = new Date();
-        endDateTime = new Date(startDateTime);
-        endDateTime.setDate(endDateTime.getDate() + 1);
-      }
-    } else {
-      // Default to 24 hours if no dates are set
-      startDateTime = new Date();
-      endDateTime = new Date(startDateTime);
-      endDateTime.setDate(endDateTime.getDate() + 1);
-    }
-    
-    // Calculate hours difference
-    const hoursDiff = Math.max(
-      1,
-      Math.ceil((endDateTime - startDateTime) / (1000 * 60 * 60))
-    );
-    
-    const baseFare = car.price_per_hour * hoursDiff;
-    const tripProtectionFee = Math.round(baseFare * 0.05); // 5% of base fare
-    const taxes = Math.round((baseFare + tripProtectionFee) * 0.18); // 18% GST
+    const totalHours = calculateTotalHours();
+  
+  // Calculate pricing
+  const hourlyRate = car.price_per_hour || 0;
+  const mainAmount = hourlyRate * totalHours;
+  const securityDeposit = hourlyRate * 5; // 5 times hourly rate
+  
+  // Calculate total after discount
+  const grandTotal = mainAmount + securityDeposit;
 
     return {
-      hoursDiff,
-      total: baseFare + tripProtectionFee + taxes,
+      totalHours,
+      total: Math.round(grandTotal),
     };
+    
   };
 
   // Format distance to show in Kms
@@ -72,11 +64,9 @@ function CarCard({ car }) {
   // Get primary image
   const carImages = [
     car.front_view_image_url,
-    car.diagonal_front_left_image_url,
     car.rear_view_image_url,
     car.left_side_image_url,
     car.right_side_image_url,
-    car.diagonal_rear_right_image_url
   ].filter(Boolean);
 
   const displayImage = carImages.length > 0 ? carImages[0] : "/api/placeholder/400/320";
@@ -119,7 +109,8 @@ function CarCard({ car }) {
           <img
             src={displayImage}
             alt={`${car.company_name} ${car.model_name}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
+            loading="lazy"
           />
           
           {/* Image counter */}
@@ -132,7 +123,7 @@ function CarCard({ car }) {
           {/* Price tag */}
           <div className="absolute top-3 right-3">
             <div className="bg-white text-black text-sm font-bold px-3 py-1 rounded shadow">
-              ₹{car.price_per_hour}/hr
+              ₹{Math.round(car.price_per_hour)}/hr
             </div>
           </div>
         </div>

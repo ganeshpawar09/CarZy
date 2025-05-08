@@ -123,54 +123,6 @@ export default function CarPhotos() {
           "Right Side View",
           "Clear photo of the car from the right side"
         )}
-        
-        {renderImageUploader(
-          "diagonal_front_left_image_url",
-          "Diagonal Front Left View",
-          "Clear photo of the car from the front-left angle"
-        )}
-        
-        {renderImageUploader(
-          "diagonal_rear_right_image_url",
-          "Diagonal Rear Right View",
-          "Clear photo of the car from the rear-right angle"
-        )}
-        
-        {renderImageUploader(
-          "dashboard_image_url",
-          "Dashboard View",
-          "Clear photo of the car's dashboard"
-        )}
-        
-        {renderImageUploader(
-          "speedometer_fuel_gauge_image_url",
-          "Speedometer & Fuel Gauge",
-          "Clear photo of the speedometer and fuel gauge"
-        )}
-        
-        {renderImageUploader(
-          "front_seats_image_url",
-          "Front Seats",
-          "Clear photo of the car's front seats"
-        )}
-        
-        {renderImageUploader(
-          "rear_seats_image_url",
-          "Rear Seats",
-          "Clear photo of the car's rear seats"
-        )}
-        
-        {renderImageUploader(
-          "boot_space_image_url",
-          "Boot Space",
-          "Clear photo of the car's boot/trunk space"
-        )}
-        
-        {renderImageUploader(
-          "tyre_condition_image_url",
-          "Tyre Condition",
-          "Clear photo showing the condition of the tyres"
-        )}
       </div>
       
       <div className="mt-6 flex justify-between">

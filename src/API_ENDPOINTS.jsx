@@ -24,7 +24,14 @@ export const API_ENDPOINTS = {
   PENALTIES: `${BASE_URL}/api/v1/user/penalties`,
   REFUNDS: `${BASE_URL}/api/v1/user/refunds`,
   COUPONS: `${BASE_URL}/api/v1/user/coupons`,
-  COUPON_APPLY: `${BASE_URL}/api/v1/user/coupon`,
+  PAYOUTS: `${BASE_URL}/api/v1/user/payouts`,
+
+  SYSTEM_REVIEW: `${BASE_URL}/api/v1/user/get-system_review/{user_id}`,
+  SYSTEM_REVIEW_POST: `${BASE_URL}/api/v1/user/post-system-review`,
+
+  COUPON_APPLY: `${BASE_URL}/api/v1/booking/coupon`,
+ 
+
 
   CHANGE_VISIBILITY: `${BASE_URL}/api/v1/change-visibility`,
 
@@ -41,7 +48,14 @@ export const API_ENDPOINTS = {
 
   CREATE_RAZORPAY_ORDER: `${BASE_URL}/api/v1/booking/create-razorpay-order`,
   VERIFY_PAYMENT: `${BASE_URL}/api/v1/booking/verify-payment`,
-  
+
+  CLAIM_REFUND: `${BASE_URL}/api/v1/user/claim-refund`,
+  PAY_PENALTY: `${BASE_URL}/api/v1/user/pay-penalty`,
+
+  CLAIM_PAYOUT: `${BASE_URL}/api/v1/user/claim-payout`,
+
+ 
+
 
 
 

@@ -242,7 +242,7 @@ export default function LoginModal({
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="9876543210"
+                    placeholder="0000000000"
                     className="flex-1 px-3 py-2 outline-none"
                     required
                     maxLength={10}

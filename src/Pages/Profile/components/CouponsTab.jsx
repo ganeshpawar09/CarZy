@@ -65,7 +65,7 @@ export default function CouponsTab() {
               </div>
               <div className="p-4">
                 <div className="text-center mb-3">
-                  <span className="text-3xl font-bold text-green-600">{coupon.discount_percentage}%</span>
+                  <span className="text-3xl font-bold text-green-600">{coupon.discount}%</span>
                   <p className="text-sm text-gray-500">Discount</p>
                 </div>
                     
@@ -75,11 +75,6 @@ export default function CouponsTab() {
                   <div className="font-mono font-medium select-all">{coupon.id}</div>
                 </div>
                     
-                {coupon.issued_for_reason && (
-                  <div className="mt-2 text-sm">
-                    <span className="font-medium">Reason:</span> {coupon.issued_for_reason}
-                  </div>
-                )}
                 
                 <div className="mt-3 text-xs text-gray-500">
                   Issued on {new Date(coupon.created_at).toLocaleDateString()}

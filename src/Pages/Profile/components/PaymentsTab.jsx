@@ -34,16 +34,34 @@ export default function PaymentsTab() {
     fetchPayments();
   }, []);
 
+
+  const formatCurrency = (amount) => {
+    amount=Math.round(amount);
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  
   // Calculate the actual discount amount based on percentage
   const calculateDiscountAmount = (payment) => {
-    const baseAmount = payment.total_hours * payment.price_per_hour;
-    return (baseAmount * payment.coupon_discount) / 100;
+    return Math.round((Math.round(payment.total_hours* payment.price_per_hour) * payment.coupon_discount) / 100);
   };
 
   // Calculate the subtotal before discount
   const calculateSubtotal = (payment) => {
     return payment.total_hours * payment.price_per_hour;
   };
+  
+  // Calculate the correct total amount
+  const calculateTotalAmount = (payment) => {
+    const discountAmount = calculateDiscountAmount(payment);
+    return Math.round(payment.total_hours* payment.price_per_hour)- discountAmount + payment.security_deposit;
+  };
+
+  const totalPaid = payments.reduce((sum, payment) => 
+    payment.status.toLowerCase() === "paid" ? sum + Math.round(payment.total_hours* payment.price_per_hour) : sum, 0);
 
   if (loading) return (
     <div className="flex justify-center items-center py-16">
@@ -60,9 +78,6 @@ export default function PaymentsTab() {
       </div>
     </div>
   );
-
-  const totalPaid = payments.reduce((sum, payment) => 
-    payment.status.toLowerCase() === "paid" ? sum + payment.total_amount : sum, 0);
 
   return (
     <div className="space-y-6">
@@ -124,6 +139,7 @@ export default function PaymentsTab() {
                 {payments.map((payment) => {
                   const subtotal = calculateSubtotal(payment);
                   const discountAmount = calculateDiscountAmount(payment);
+                  const correctTotalAmount = calculateTotalAmount(payment);
                   const formattedDate = new Date(payment.created_at).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'short',
@@ -146,11 +162,12 @@ export default function PaymentsTab() {
                           </div>
                           <div className="flex justify-between">
                             <span>Rate:</span>
-                            <span>₹ {payment.price_per_hour}/hr</span>
+                            <span>{formatCurrency(payment.price_per_hour)}/hr</span>
                           </div>
+                          
                           <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span>₹ {subtotal.toLocaleString('en-IN')}</span>
+                            <span>Main Amount:</span>
+                            <span>{formatCurrency(payment.total_hours* payment.price_per_hour)}</span>
                           </div>
                           {payment.coupon_discount > 0 && (
                             <div className="flex justify-between text-green-600">
@@ -162,10 +179,15 @@ export default function PaymentsTab() {
                             <span>Security Deposit:</span>
                             <span>₹ {payment.security_deposit.toLocaleString('en-IN')}</span>
                           </div>
+                          <div className="flex justify-between font-semibold">
+                            <span>Calculated Total:</span>
+                            <span>₹ {correctTotalAmount.toLocaleString('en-IN')}</span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-bold text-gray-900">₹ {payment.total_amount.toLocaleString('en-IN')}</div>
+                        <div className="text-sm font-bold text-gray-900">₹ {correctTotalAmount.toLocaleString('en-IN')}</div>
+                       
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
